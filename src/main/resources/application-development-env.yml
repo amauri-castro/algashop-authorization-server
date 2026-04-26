@@ -22,6 +22,13 @@ spring:
                 - credit-cards:read
                 - invoices:write
                 - invoices:read
+                - orders:read
+                - orders:write
+                - customers:read
+                - customers:write
+                - shopping-carts:read
+                - shopping-carts:write
+                - shipping-costs:preview
             token:
               access-token-time-to-live: 15m
               access-token-format: self-contained # Opaco(reference)
