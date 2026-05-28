@@ -5,7 +5,6 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.domain.AbstractAggregateRoot;
 
 import java.util.UUID;
 
@@ -14,7 +13,7 @@ import java.util.UUID;
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AuthUser extends AbstractAggregateRoot<AuthUser> {
+public class AuthUser extends AbstractAuditableAggregateRoot<AuthUser> {
 
     @Id
     @EqualsAndHashCode.Include
