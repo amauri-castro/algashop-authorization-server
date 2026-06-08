@@ -1,4 +1,4 @@
-package com.algashop.authorizationserver.infrastructure.security;
+package com.algashop.authorizationserver.infrastructure.security.password;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
