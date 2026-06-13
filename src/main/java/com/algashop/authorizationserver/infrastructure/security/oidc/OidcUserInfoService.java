@@ -1,7 +1,7 @@
 package com.algashop.authorizationserver.infrastructure.security.oidc;
 
-import com.algashop.authorizationserver.domain.model.AuthUser;
-import com.algashop.authorizationserver.domain.model.AuthUserRepository;
+import com.algashop.authorizationserver.domain.model.user.AuthUser;
+import com.algashop.authorizationserver.domain.model.user.AuthUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
