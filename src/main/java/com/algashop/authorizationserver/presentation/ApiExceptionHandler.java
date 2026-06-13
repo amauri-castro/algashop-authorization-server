@@ -2,6 +2,7 @@ package com.algashop.authorizationserver.presentation;
 
 
 import com.algashop.authorizationserver.application.user.management.AuthUserEmailAlreadyInUseException;
+import com.algashop.authorizationserver.application.user.query.AuthUserNotFoundException;
 import com.algashop.authorizationserver.domain.model.DomainException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +62,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return problemDetail;
     }
 
-    @ExceptionHandler({AuthorizationDeniedException.class})
+    @ExceptionHandler(AuthorizationDeniedException.class)
     public ProblemDetail handleAuthorizationDeniedException(AuthorizationDeniedException e) {
         ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
         problemDetail.setTitle("Forbidden");
@@ -69,6 +70,16 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         problemDetail.setType(URI.create("/errors/forbidden"));
         return problemDetail;
     }
+
+    @ExceptionHandler(AuthUserNotFoundException.class)
+    public ProblemDetail handleAuthUserNotFoundException(AuthUserNotFoundException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problemDetail.setTitle("Not found");
+        problemDetail.setDetail(e.getMessage());
+        problemDetail.setType(URI.create("/errors/not-found"));
+        return problemDetail;
+    }
+
 
     @ExceptionHandler({AuthUserEmailAlreadyInUseException.class})
     public ProblemDetail handleAuthorizationDeniedException(AuthUserEmailAlreadyInUseException e) {
