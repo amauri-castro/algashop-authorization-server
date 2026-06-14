@@ -3,6 +3,7 @@ package com.algashop.authorizationserver.presentation;
 import com.algashop.authorizationserver.application.user.management.AuthUserInput;
 import com.algashop.authorizationserver.application.user.management.AuthUserManagementApplicationService;
 import com.algashop.authorizationserver.application.user.query.AuthUserOutput;
+import com.algashop.authorizationserver.infrastructure.security.check.SecurityAnnotations;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @SecurityAnnotations.CanWriteUsers
     public AuthUserOutput create (@RequestBody @Valid AuthUserInput input) {
         return managementService.create(input);
     }
