@@ -1,7 +1,5 @@
 package com.algashop.authorizationserver.application.user.query;
 
-import org.springframework.data.domain.Page;
-
 import java.util.UUID;
 
 

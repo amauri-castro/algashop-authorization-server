@@ -60,6 +60,5 @@ public class AuthUserManagementApplicationService {
 
         user.anonymize();
         authUserRepository.save(user);
-
     }
 }
