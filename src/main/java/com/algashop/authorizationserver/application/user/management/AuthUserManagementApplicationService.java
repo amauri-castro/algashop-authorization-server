@@ -5,7 +5,6 @@ import com.algashop.authorizationserver.application.user.query.AuthUserNotFoundE
 import com.algashop.authorizationserver.application.user.query.AuthUserOutput;
 import com.algashop.authorizationserver.domain.model.user.AuthUser;
 import com.algashop.authorizationserver.domain.model.user.AuthUserRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.access.AccessDeniedException;
@@ -55,10 +54,24 @@ public class AuthUserManagementApplicationService {
         AuthUser user = authUserRepository.findById(userId)
                 .orElseThrow(() -> new AuthUserNotFoundException(userId));
 
+        verifyCanEditUser(user, input);
+
         user.setName(input.getName());
         user.setType(input.getType());
         user.setEnabled(input.isEnabled());
         return AuthUserOutput.from(authUserRepository.save(user));
+    }
+
+    private void verifyCanEditUser(AuthUser authUser, AuthUserUpdateInput input) {
+        if (!securityCheck.canEditUser(authUser.getType(), authUser.getId())) {
+            throw new AccessDeniedException("Cannot edit user of type " + authUser.getType());
+        }
+
+        if (!securityCheck.canChangeUserType(authUser.getType(), input.getType())) {
+            throw new AccessDeniedException("Cannot change user type to " + input.getType());
+        }
+
+
     }
 
     public void delete(UUID userId) {
