@@ -1,5 +1,6 @@
 package com.algashop.authorizationserver.infrastructure.security;
 
+import com.algashop.authorizationserver.infrastructure.security.code.DelegatingAuthorizationCodeRequestValidator;
 import com.algashop.authorizationserver.infrastructure.security.oidc.OidcLogoutSuccessHandlerConfig;
 import com.algashop.authorizationserver.infrastructure.security.oidc.OidcUserInfoMapper;
 import lombok.RequiredArgsConstructor;
@@ -7,16 +8,21 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationProvider;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientRegistrationAuthenticationProvider;
 import org.springframework.security.oauth2.server.authorization.oidc.web.authentication.OidcLogoutAuthenticationSuccessHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -27,6 +33,7 @@ public class AuthorizationServerSecurityConfig {
     private final OidcUserInfoMapper oidcUserInfoMapper;
     private final OidcLogoutAuthenticationSuccessHandler oidcLogoutAuthenticationSuccessHandler;
     private final AlgaShopSecurityProperties properties;
+    private final DelegatingAuthorizationCodeRequestValidator delegatingAuthorizationCodeRequestValidator;
 
     @Bean
     @Order(1)
@@ -39,11 +46,16 @@ public class AuthorizationServerSecurityConfig {
                     var csp = properties.getCsp();
                     headers.contentSecurityPolicy(c -> c.policyDirectives(csp.getPolicyDirectives()));
                 })
-                .with(authorizationServer, configurer ->
-                    configurer.oidc(oidc -> oidc
-                            .logoutEndpoint(logout -> logout.logoutResponseHandler(oidcLogoutAuthenticationSuccessHandler))
-                            .userInfoEndpoint(userInfo -> userInfo.userInfoMapper(oidcUserInfoMapper))
-                    )
+                .with(authorizationServer, configurer -> configurer
+                        .oidc(oidc -> oidc
+                            .logoutEndpoint(logout -> logout
+                                    .logoutResponseHandler(oidcLogoutAuthenticationSuccessHandler))
+                            .userInfoEndpoint(userInfo -> userInfo
+                                    .userInfoMapper(oidcUserInfoMapper))
+                        )
+                        .authorizationEndpoint(endpoint -> endpoint
+                                .authenticationProviders(this::customizeAuthenticationProviders)
+                        )
                 )
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
                 .exceptionHandling(
@@ -54,6 +66,13 @@ public class AuthorizationServerSecurityConfig {
                 );
 
         return http.build();
+    }
+
+    private void customizeAuthenticationProviders(List<AuthenticationProvider> authenticationProviders) {
+        authenticationProviders.stream()
+                .filter(OAuth2AuthorizationCodeRequestAuthenticationProvider.class::isInstance)
+                .map(OAuth2AuthorizationCodeRequestAuthenticationProvider.class::cast)
+                .forEach(provider -> provider.setAuthenticationValidator(delegatingAuthorizationCodeRequestValidator));
     }
 
     @Bean
