@@ -55,6 +55,7 @@ public class AuthorizationServerSecurityConfig {
                         )
                         .authorizationEndpoint(endpoint -> endpoint
                                 .authenticationProviders(this::customizeAuthenticationProviders)
+                                .consentPage("/oauth2/consent")
                         )
                 )
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
@@ -66,13 +67,6 @@ public class AuthorizationServerSecurityConfig {
                 );
 
         return http.build();
-    }
-
-    private void customizeAuthenticationProviders(List<AuthenticationProvider> authenticationProviders) {
-        authenticationProviders.stream()
-                .filter(OAuth2AuthorizationCodeRequestAuthenticationProvider.class::isInstance)
-                .map(OAuth2AuthorizationCodeRequestAuthenticationProvider.class::cast)
-                .forEach(provider -> provider.setAuthenticationValidator(delegatingAuthorizationCodeRequestValidator));
     }
 
     @Bean
@@ -100,5 +94,12 @@ public class AuthorizationServerSecurityConfig {
                         .anyRequest().authenticated())
                 .formLogin(c -> c.loginPage("/login").permitAll());
         return http.build();
+    }
+
+    private void customizeAuthenticationProviders(List<AuthenticationProvider> authenticationProviders) {
+        authenticationProviders.stream()
+                .filter(OAuth2AuthorizationCodeRequestAuthenticationProvider.class::isInstance)
+                .map(OAuth2AuthorizationCodeRequestAuthenticationProvider.class::cast)
+                .forEach(provider -> provider.setAuthenticationValidator(delegatingAuthorizationCodeRequestValidator));
     }
 }
