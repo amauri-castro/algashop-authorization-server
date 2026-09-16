@@ -1,6 +1,6 @@
 package com.algashop.authorizationserver.presentation;
 
-import com.algashop.authorizationserver.application.security.SecurityCheckApplicationService;
+import com.algashop.authorizationserver.application.security.SecurityChecks;
 import com.algashop.authorizationserver.application.user.query.AuthUserOutput;
 import com.algashop.authorizationserver.application.user.query.AuthUserQueryService;
 import com.algashop.authorizationserver.infrastructure.security.check.SecurityAnnotations;
@@ -16,7 +16,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MyUserController {
 
-    private final SecurityCheckApplicationService securityCheck;
+    private final SecurityChecks securityCheck;
     private final AuthUserQueryService authUserQueryService;
 
     @GetMapping
