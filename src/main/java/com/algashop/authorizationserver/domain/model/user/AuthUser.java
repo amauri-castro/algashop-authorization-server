@@ -62,6 +62,18 @@ public class AuthUser extends AbstractAuditableAggregateRoot<AuthUser> {
         return plainToken;
     }
 
+    public void changePasswordWithToken(String plainToken,
+                                        String plainPassword,
+                                        AuthUserPasswordManager passwordManager,
+                                        VerificationTokenHasher tokenHasher) {
+        verifyToken(plainToken, tokenHasher);
+        setPassword(passwordManager.encrypt(plainPassword));
+        cleanVerificationToken();
+        if (!isEmailVerified()) {
+            setEmailVerified(true);
+        }
+    }
+
     public boolean isDisabled() {
         return !isEmailVerified() || !isEnabled();
     }
@@ -89,6 +101,29 @@ public class AuthUser extends AbstractAuditableAggregateRoot<AuthUser> {
         this.setName("Anonymized User");
         this.setEmail("anonymized-" + this.id + "@deleted.local");
         this.setEnabled(false);
+    }
+
+    private void cleanVerificationToken() {
+        this.verificationToken = null;
+        this.verificationTokenExpirationDate = null;
+    }
+
+    private void verifyToken(String plainToken, VerificationTokenHasher tokenHasher) {
+        if (!tokenHasher.isEqual(this.verificationToken, plainToken)) {
+            throw new IllegalArgumentException("Invalid token");
+        }
+
+        if (isTokenExpired()) {
+            throw new IllegalStateException("Token has expired");
+        }
+
+    }
+
+    private boolean isTokenExpired() {
+        if (verificationTokenExpirationDate == null) {
+            return true;
+        }
+        return OffsetDateTime.now().isAfter(verificationTokenExpirationDate);
     }
 
     private void setPassword(String password) {
