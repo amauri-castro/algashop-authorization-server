@@ -40,6 +40,16 @@ public class PasswordManagementApplicationService {
 
     public void requestPasswordChange(UUID userId) {
         AuthUser authUser = authUserRepository.findById(userId).orElseThrow(() -> new AuthUserNotFoundException(userId));
+        requestPasswordChange(authUser);
+    }
+
+    public void requestPasswordChange(String email) {
+        AuthUser authUser = authUserRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthUserNotFoundException(email));
+        requestPasswordChange(authUser);
+    }
+
+    private void requestPasswordChange(AuthUser authUser) {
         String plainToken = authUser.generateVerificationToken(
                 userAccountProperties.getToken().getPasswordResetTtl(), tokenHasher);
 
