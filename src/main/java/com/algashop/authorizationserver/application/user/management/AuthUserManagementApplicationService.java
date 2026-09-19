@@ -5,10 +5,7 @@ import com.algashop.authorizationserver.application.user.UserAccountProperties;
 import com.algashop.authorizationserver.application.user.mail.AuthUserMailSender;
 import com.algashop.authorizationserver.application.user.query.AuthUserNotFoundException;
 import com.algashop.authorizationserver.application.user.query.AuthUserOutput;
-import com.algashop.authorizationserver.domain.model.user.AuthUser;
-import com.algashop.authorizationserver.domain.model.user.AuthUserPasswordManager;
-import com.algashop.authorizationserver.domain.model.user.AuthUserRepository;
-import com.algashop.authorizationserver.domain.model.user.VerificationTokenHasher;
+import com.algashop.authorizationserver.domain.model.user.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -64,6 +61,29 @@ public class AuthUserManagementApplicationService {
         return AuthUserOutput.from(authUserRepository.save(user));
     }
 
+    public AuthUserOutput update(UUID userId, MyUserUpdateInput input) {
+        AuthUser user = authUserRepository.findById(userId)
+                .orElseThrow(() -> new AuthUserNotFoundException(userId));
+
+        if (!securityCheck.canEditUser(user.getType(), user.getId())) {
+            throw new AccessDeniedException("Cannot edit user");
+        }
+
+        user.setName(input.getName());
+
+        return AuthUserOutput.from(authUserRepository.save(user));
+    }
+
+    public void delete(UUID userId) {
+        AuthUser user = authUserRepository.findById(userId)
+                .orElseThrow(() -> new AuthUserNotFoundException(userId));
+
+        verifyCanArchiveOwnUser(user);
+
+        user.anonymize();
+        authUserRepository.save(user);
+    }
+
     private void verifyCanEditUser(AuthUser authUser, AuthUserUpdateInput input) {
         if (!securityCheck.canEditUser(authUser.getType(), authUser.getId())) {
             throw new AccessDeniedException("Cannot edit user of type " + authUser.getType());
@@ -76,11 +96,10 @@ public class AuthUserManagementApplicationService {
 
     }
 
-    public void delete(UUID userId) {
-        AuthUser user = authUserRepository.findById(userId)
-                .orElseThrow(() -> new AuthUserNotFoundException(userId));
-
-        user.anonymize();
-        authUserRepository.save(user);
+    private void verifyCanArchiveOwnUser(AuthUser user) {
+        if (securityCheck.getAuthenticatedUserId().equals(user.getId()) &&
+                user.getType() != AuthUserType.CUSTOMER) {
+            throw new AccessDeniedException("Only CUSTOMER users can delete their own profile");
+        }
     }
 }
