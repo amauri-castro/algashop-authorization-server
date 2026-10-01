@@ -2,6 +2,7 @@ spring:
   config:
     import:
       - aws-secretsmanager:/secret/algashop/authorization-server/database?prefix=auth.secrets.datasource.
+      - aws-parameterstore:/config/algashop/authorization-server?prefix=auth.params
   cloud:
     aws:
       credentials:
@@ -17,7 +18,7 @@ spring:
     store-type: jdbc
     timeout: 30m
   datasource:
-    url: jdbc:postgresql://localhost:5432/authorization_server
+    url: ${auth.params.datasource.url}
     username: ${auth.secrets.datasource.username}
     password: ${auth.secrets.datasource.password}
   jpa:
@@ -31,7 +32,7 @@ spring:
   security:
     oauth2:
       authorizationserver:
-        issuer: http://auth.algashop.local:8081
+        issuer: ${auth.params.issuer}
         client:
           algashop-test-client:
             registration:
@@ -40,7 +41,7 @@ spring:
                 - client_credentials
               client-authentication-methods:
                 - client_secret_basic
-              client-secret: "{noop}testing123"
+              client-secret: ${auth.params.clients.algashop-test.secret}
               scopes:
                 - products:read
                 - products:write
